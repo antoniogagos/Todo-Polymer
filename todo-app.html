@@ -1,0 +1,226 @@
+<!-- import polymer-element -->
+<script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+<link rel="import" href="/bower_components/polymer/polymer.html">
+
+
+<dom-module id="todo-app">
+  <template>
+    <style>
+
+    :host {
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .iron-selected {
+      background: #eee;
+    }
+
+    .container {
+      background: #EFEFEF;
+      box-shadow: 0 1px 3px 0 rgba(0,0,0,0.50);
+      width: 560px;
+      padding: 30px;
+      margin: 0 auto;
+      margin-top: 200px;
+    }
+
+    #userInput::-webkit-input-placeholder {
+      font-size: 24px;
+      color: #B7C9D8;
+      font-weight: lighter;
+    }
+
+    #userInput:focus {
+      outline: none;
+    }
+
+    #userInput {
+      width: 100%;
+      border: none;
+      background-color: #EFEFEF;
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+
+    .input-border-bottom {
+      margin: 0px;
+      border-style: solid;
+      border-width: 1px;
+      color: #aad4e2;
+    }
+
+    .todo-item {
+      display: flex;
+      transition: all 0.3s ease;
+      background: #EEEEEE;
+      box-shadow: 0 2px 4px 0 rgba(177,177,177,0.50);
+      margin: 30px 0;
+    }
+
+    .todo-item:hover .todo-delete {
+      display: flex;
+    }
+
+    .todo-text {
+      font-size: 22px;
+      color: #548EBD;
+      width: 80%;
+      margin-left: 10px;
+      padding: 30px 20px;
+    }
+
+    .todo-check {
+      transition: all 0.2s ease;
+      padding: 10px 7px;
+      background: #DBABA5;
+      max-height: 34px;
+      margin-left: 20px;
+    }
+
+    .todo-delete {
+      display: none;
+      margin: 0 15px;
+    }
+
+    .filters {
+      display: flex;
+      justify-content: center;
+      margin-top: 80px;
+      margin-left: 40px;
+    }
+
+    .filters > div {
+      font-weight: lighter;
+      font-size: 16px;
+      color: #55A5E5;
+      margin-right: 50px;
+    }
+
+    .done {
+      background-color: #78CB5C;
+    }
+
+    .underlined {
+      color: #6D9A5E;
+      text-decoration: line-through;
+    }
+
+    .stamped {
+      background-color: #6D9A5E;
+      padding: 26px 7px;
+    }
+
+    </style>
+
+    <div class="container">
+
+      <input id="userInput" type="text" placeholder="What needs to be done?">
+      <hr class="input-border-bottom">
+
+
+      <!-- Quiero que se filtre la array de todos para que salgan dependiendo si pinchas en 'All' 'Active' o 'Completed'
+      item.done = true o item.done == false-->
+      
+      <dom-repeat class="items" items={{todo}} filter="filterItems">
+        <template>
+
+          <div class="todo-item">
+
+            <div on-click="_itemDone" class="todo-check">
+              <img src="img/check.svg">
+            </div>
+
+            <div class="todo-text">[[item.text]]</div>
+
+            <!-- Display on hover-->
+            <img on-click="_deleteItem" class="todo-delete" src="img/delete.svg">
+
+          </div>
+
+        </template>
+      </dom-repeat>
+
+
+      <div class="filters">
+        <div on-click="_filterAll">All</div>
+        <div on-click="_filterActive">Active</div>
+        <div on-click="_filterCompleted">Completed</div>
+      </div>
+    </div>
+  </template>
+  <script>
+    class TodoApp extends Polymer.Element {
+      static get is() { return "todo-app"; }
+
+      static get properties() {
+        return {
+          todo: {
+            type: Array,
+            value() {
+              return [];
+            }
+          }
+        }
+      }
+
+      filterItems(items) {
+        return items
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+
+        this._inputKeydown = this._inputKeydown.bind(this);
+        this.$.userInput.addEventListener('keyup', this._inputKeydown);
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+
+        this.$.userInput.removeEventListener('keyup', this._inputKeydown);
+      }
+
+      _inputKeydown(e) {
+        if (e.keyCode == 13 && this.$.userInput.value != '') {
+          this.push('todo', {text: this.$.userInput.value, done: false});
+          this.$.userInput.value = '';
+        }
+      }
+
+      _deleteItem(e) {
+        e.model.children[1].remove();
+      }
+
+      _itemDone(e) {
+
+        var item = e.model.children[1];
+        var itemText = item.querySelector('.todo-text');
+        var itemCheck = item.querySelector('.todo-check');
+
+        var img = item.querySelector('img');
+        if (e.model.item.done == true) {
+          console.log("Done!");
+
+          item.classList.remove("done");
+          itemText.classList.remove("underlined");
+          itemCheck.classList.remove("stamped");
+          img.src = "img/check.svg";
+
+
+          e.model.set('item.done', false);
+        } else {
+
+          item.classList.add("done");
+          itemText.classList.add("underlined");
+          itemCheck.classList.add("stamped")
+
+          img.src = "img/done.svg"
+          e.model.set('item.done', true);
+        }
+      }
+    }
+
+    customElements.define(TodoApp.is, TodoApp);
+  </script>
+
+</dom-module>
