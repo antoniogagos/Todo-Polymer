@@ -100,12 +100,12 @@
       background-color: #78CB5C;
     }
 
-    .underlined {
+    .done .todo-text {
       color: #6D9A5E;
       text-decoration: line-through;
     }
 
-    .stamped {
+    .done .todo-check {
       background-color: #6D9A5E;
       padding: 26px 7px;
     }
@@ -120,11 +120,11 @@
 
       <!-- Quiero que se filtre la array de todos para que salgan dependiendo si pinchas en 'All' 'Active' o 'Completed'
       item.done = true o item.done == false-->
-      
-      <dom-repeat class="items" items={{todo}} filter="filterItems">
+
+      <dom-repeat id="domRepeat" class="items" items={{_filteredTodo}}>
         <template>
 
-          <div class="todo-item">
+          <div class$="{{_computeTodoItemClass(item)}}">
 
             <div on-click="_itemDone" class="todo-check">
               <img src="img/check.svg">
@@ -159,13 +159,19 @@
             value() {
               return [];
             }
+          },
+          _filteredTodo: {
+            type: Array,
+            computed: '_computedFilteredTodo(todo.*, _filter)',
+          },
+
+          _filter: {
+            type: String,
+            value: 'all',
           }
         }
       }
 
-      filterItems(items) {
-        return items
-      }
 
       connectedCallback() {
         super.connectedCallback();
@@ -192,32 +198,43 @@
       }
 
       _itemDone(e) {
-
-        var item = e.model.children[1];
-        var itemText = item.querySelector('.todo-text');
-        var itemCheck = item.querySelector('.todo-check');
-
-        var img = item.querySelector('img');
-        if (e.model.item.done == true) {
-          console.log("Done!");
-
-          item.classList.remove("done");
-          itemText.classList.remove("underlined");
-          itemCheck.classList.remove("stamped");
-          img.src = "img/check.svg";
-
-
-          e.model.set('item.done', false);
-        } else {
-
-          item.classList.add("done");
-          itemText.classList.add("underlined");
-          itemCheck.classList.add("stamped")
-
-          img.src = "img/done.svg"
-          e.model.set('item.done', true);
-        }
+        e.model.set('item.done', !e.model.item.done);
+        this.$.domRepeat.render();
       }
+
+      _filterAll() {
+        this._filter = 'all';
+      }
+
+      _filterActive() {
+        this._filter = 'active';
+      }
+
+      _filterCompleted() {
+        this._filter = 'completed';
+      }
+
+      _computedFilteredTodo(changes, filter) {
+        return this.todo.filter(item => {
+          if (this._filter === 'all') {
+            return true;
+          } else if (this._filter === 'active') {
+            return !item.done;
+          } else {
+            return item.done;
+          }
+        });
+      }
+
+      _computeTodoItemClass(item) {
+        console.log(item)
+        return 'todo-item' + (item.done ? ' done' : '');
+      }
+
+      _computeItemToggleImg(item) {
+        return !item.done ? 'img/check.svg' : 'img/done.svg';
+      }
+
     }
 
     customElements.define(TodoApp.is, TodoApp);
